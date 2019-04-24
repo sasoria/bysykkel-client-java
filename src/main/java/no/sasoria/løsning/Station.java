@@ -42,4 +42,12 @@ public class Station {
     public void setLocksAvailable(int locksAvailable) {
         this.locksAvailable = locksAvailable;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("Station: " + getName() + "\n")
+                .append("\t-bikes available: " + getBikesAvailable() + "\n")
+                .append("\t-locks available: " + getLocksAvailable() + "\n");
+        return builder.toString();
+    }
 }

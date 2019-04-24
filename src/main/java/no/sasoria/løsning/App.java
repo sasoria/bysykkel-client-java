@@ -10,9 +10,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class App {
@@ -33,12 +33,13 @@ public class App {
     }
 
     private void exec() throws Exception {
-        HttpEntity infoEntity = getStations(STATION_INFO_URL);
-        HttpEntity statusEntity = getStations(STATION_STATUS_URL);
+        HttpEntity infoEntity = getStationsEntity(STATION_INFO_URL);
+        HttpEntity statusEntity = getStationsEntity(STATION_STATUS_URL);
 
         parseStationsInformation(infoEntity);
         parseStationsStatus(statusEntity);
 
+        stations.forEach(System.out::println);
     }
 
     /**
@@ -47,7 +48,7 @@ public class App {
      * @return
      * @throws IOException
      */
-    private HttpEntity getStations(String url) throws Exception, IOException {
+    private HttpEntity getStationsEntity(String url) throws Exception, IOException {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
 
@@ -67,8 +68,6 @@ public class App {
      * @return true if the request was successful.
      */
     private boolean is200(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
-
         return response.getStatusLine().getStatusCode() == 200;
     }
 
@@ -81,22 +80,12 @@ public class App {
         String json = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         JSONObject jsonObject = new JSONObject(json);
         JSONArray stationsInfo = jsonObject.getJSONObject("data").getJSONArray("stations");
-/*
-        for (String key : jsonObject.keySet()) {
-            Object value = jsonObject.get(key);
-            System.out.println("key: "+ key + ",");
-            System.out.println("value: " + value);
-            System.out.println("");
-        }
-*/
 
         for (int i = 0; i < stationsInfo.length(); i++) {
             JSONObject station = stationsInfo.getJSONObject(i);
             String staionName = station.getString("name");
             int stationId = station.getInt("station_id");
 
-            System.out.println("name: " + staionName);
-            System.out.println("id: " + stationId);
             stations.add(new Station(stationId, staionName));
         }
     }
@@ -109,10 +98,10 @@ public class App {
     private void parseStationsStatus(HttpEntity entity) throws IOException {
         String json = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         JSONObject jsonObject = new JSONObject(json);
-        JSONArray stationsStatus = jsonObject.getJSONObject("data").getJSONArray("stations");
+        JSONArray stationsStatusArray = jsonObject.getJSONObject("data").getJSONArray("stations");
 
-        for (int i = 0; i < stationsStatus.length(); i++) {
-            JSONObject stationJson = stationsStatus.getJSONObject(i);
+        for (int i = 0; i < stationsStatusArray.length(); i++) {
+            JSONObject stationJson = stationsStatusArray.getJSONObject(i);
 
             int bikesAvailable = stationJson.getInt("num_bikes_available");
             int locksAvailable = stationJson.getInt("num_docks_available");
@@ -122,17 +111,9 @@ public class App {
                 if(station.getId() == stationId) {
                     station.setBikesAvailable(bikesAvailable);
                     station.setLocksAvailable(locksAvailable);
+                    break;
                 }
-            }
-
-            for(Station station : stations){
-                System.out.println("Station: " + station.getName());
-                System.out.println("\t-locks available: " + station.getLocksAvailable());
-                System.out.println("\t-bikes available: " + station.getBikesAvailable());
             }
         }
     }
-
-
-
 }
