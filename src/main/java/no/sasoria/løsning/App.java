@@ -2,17 +2,15 @@ package no.sasoria.løsning;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.nio.charset.StandardCharsets;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class App {
@@ -20,25 +18,25 @@ public class App {
             "http://gbfs.urbansharing.com/oslobysykkel.no/station_information.json";
     private static final String STATION_STATUS_URL =
             "http://gbfs.urbansharing.com/oslobysykkel.no/station_status.json";
-    private List<Station> stations;
+    private List<Station> stations = new ArrayList<>();
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         App app = new App();
-        app.init();
-        app.exec();
+
+        try {
+            app.exec();
+        } catch (ClientProtocolException exception) {
+            System.out.println(exception.getMessage());
+        } catch (IOException exception) {
+            System.out.println(exception.getMessage());
+        }
     }
 
-    private void init() {
-        stations = new ArrayList<Station>();
-    }
+    private void exec() throws IOException {
+        JSONArray stationsInfoArray = getStationsArray(STATION_INFO_URL);
+        JSONArray stationsStatusArray = getStationsArray(STATION_STATUS_URL);
 
-    private void exec() throws Exception {
-        HttpEntity infoEntity = getStationsEntity(STATION_INFO_URL);
-        HttpEntity statusEntity = getStationsEntity(STATION_STATUS_URL);
-
-        parseStationsInformation(infoEntity);
-        parseStationsStatus(statusEntity);
-
+        createStations(stationsInfoArray, stationsStatusArray);
         stations.forEach(System.out::println);
     }
 
@@ -48,18 +46,20 @@ public class App {
      * @return
      * @throws IOException
      */
-    private HttpEntity getStationsEntity(String url) throws Exception, IOException {
+    private JSONArray getStationsArray(String url) throws IOException {
         HttpClient client = HttpClientBuilder.create().build();
+
         HttpGet request = new HttpGet(url);
+        request.addHeader("client-name", "sasoria-origosolution");
 
         HttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
 
         if(is200(response))
-            return entity;
+            return JsonParser.parseStations(entity);
 
         else
-            throw new Exception("Get request failed");
+            throw new ClientProtocolException("GET failed, statusCode=" + response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -71,46 +71,26 @@ public class App {
         return response.getStatusLine().getStatusCode() == 200;
     }
 
-    /**
-     * Parses an HttpEntity for StationInformation to a json object.
-     * @param entity
-     * @return
-     */
-    private void parseStationsInformation(HttpEntity entity) throws IOException {
-        String json = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-        JSONObject jsonObject = new JSONObject(json);
-        JSONArray stationsInfo = jsonObject.getJSONObject("data").getJSONArray("stations");
+    private Station createStation(JSONObject stationInfo, JSONObject stationStatus) {
+        String stationName = stationInfo.getString("name");
+        int bikesAvailable = stationStatus.getInt("num_bikes_available");
+        int locksAvailable = stationStatus.getInt("num_docks_available");
 
-        for (int i = 0; i < stationsInfo.length(); i++) {
-            JSONObject station = stationsInfo.getJSONObject(i);
-            String staionName = station.getString("name");
-            int stationId = station.getInt("station_id");
+        return new Station(stationName, bikesAvailable, locksAvailable);
 
-            stations.add(new Station(stationId, staionName));
-        }
     }
 
-    /**
-     * Parses an HttpEntity for StationInformation to a json object.
-     * @param entity
-     * @return
-     */
-    private void parseStationsStatus(HttpEntity entity) throws IOException {
-        String json = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-        JSONObject jsonObject = new JSONObject(json);
-        JSONArray stationsStatusArray = jsonObject.getJSONObject("data").getJSONArray("stations");
+    private void createStations(JSONArray stationsInfoArray, JSONArray stationsStatusArray) {
+        // Stations in station_info.json
+        for (int i = 0; i < stationsInfoArray.length(); i++) {
+            JSONObject stationInfoJson = stationsInfoArray.getJSONObject(i);
+            int stationId = stationInfoJson.getInt("station_id");
 
-        for (int i = 0; i < stationsStatusArray.length(); i++) {
-            JSONObject stationJson = stationsStatusArray.getJSONObject(i);
-
-            int bikesAvailable = stationJson.getInt("num_bikes_available");
-            int locksAvailable = stationJson.getInt("num_docks_available");
-            int stationId = stationJson.getInt("station_id");
-
-            for(Station station : stations ){
-                if(station.getId() == stationId) {
-                    station.setBikesAvailable(bikesAvailable);
-                    station.setLocksAvailable(locksAvailable);
+            // Stations in station_status.json
+            for (int k = 0; k < stationsStatusArray.length(); k++) {
+                JSONObject stationStatusJson = stationsStatusArray.getJSONObject(k);
+                if (stationId == stationStatusJson.getInt("station_id")) {
+                    stations.add(createStation(stationInfoJson, stationStatusJson));
                     break;
                 }
             }
