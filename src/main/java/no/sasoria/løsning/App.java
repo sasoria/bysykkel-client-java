@@ -82,7 +82,6 @@ public class App {
         int locksAvailable = stationStatus.getInt("num_docks_available");
 
         return new Station(stationName, bikesAvailable, locksAvailable);
-
     }
 
     /**
