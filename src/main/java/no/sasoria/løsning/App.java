@@ -57,7 +57,6 @@ public class App {
 
         if(is200(response))
             return JsonParser.parseStations(entity);
-
         else
             throw new ClientProtocolException("GET failed, statusCode=" + response.getStatusLine().getStatusCode());
     }
