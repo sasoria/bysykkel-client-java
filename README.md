@@ -8,8 +8,8 @@ Apache Maven 3.6.0
 
 ## Run
 ```
-mvn clean install
-java -jar target/no.sasoria.losning-1.0-SNAPSHOT.jar
+$ mvn clean install
+$ java -jar target/no.sasoria.losning-1.0-SNAPSHOT.jar
 ```
 
 ## Eksempel
