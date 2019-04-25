@@ -1,14 +1,14 @@
 package no.sasoria.løsning;
 
 public class Station {
-    private int id;
     private String name;
     private int bikesAvailable;
     private int locksAvailable;
 
-    public Station(int id, String name) {
-        this.id = id;
+    public Station(String name, int bikesAvailable, int locksAvailable) {
         this.name = name;
+        this.bikesAvailable = bikesAvailable;
+        this.locksAvailable = locksAvailable;
     }
 
     public String getName() {
@@ -17,14 +17,6 @@ public class Station {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getBikesAvailable() {
