@@ -41,10 +41,11 @@ public class App {
     }
 
     /**
-     * Performs get requests to oslobysykkel.no, parses the response and adds {@code Station} instances to stations.
+     * Performs GET requests, parses the response and returns a parsed JSONArray of stations.
      * @param url
-     * @return
-     * @throws IOException
+     * @return parsed JSONArray of stations.
+     * @throws IOException when JSON parsing fails,
+     * @throws IOException when GET request fails (ClientProtocolException).
      */
     private JSONArray getStationsArray(String url) throws IOException {
         HttpClient client = HttpClientBuilder.create().build();
@@ -71,6 +72,12 @@ public class App {
         return response.getStatusLine().getStatusCode() == 200;
     }
 
+    /**
+     * Creates an instance of {@code Station} from stationInfo and stationStatus JSON objects.
+     * @param stationInfo
+     * @param stationStatus
+     * @return {@code Station}
+     */
     private Station createStation(JSONObject stationInfo, JSONObject stationStatus) {
         String stationName = stationInfo.getString("name");
         int bikesAvailable = stationStatus.getInt("num_bikes_available");
@@ -80,6 +87,11 @@ public class App {
 
     }
 
+    /**
+     * Creates a list of stations by adding stations to {@code List<Station> stations}.
+     * @param stationsInfoArray
+     * @param stationsStatusArray
+     */
     private void createStations(JSONArray stationsInfoArray, JSONArray stationsStatusArray) {
         // Stations in station_info.json
         for (int i = 0; i < stationsInfoArray.length(); i++) {
