@@ -1,10 +1,11 @@
 # bysykkel-client-java
 
 Denne løsningen er testet på Linux (Ubuntu 18.04) og Mac OS (Mojave 10.14.3) med,
-```
-javac 11.0.1
-Apache Maven 3.6.0
-```
+
+* java 11.0.1
+* javac 11.0.1
+* apache maven 3.6.0
+
 
 ## Kjøring
 ```
