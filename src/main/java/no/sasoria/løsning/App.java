@@ -49,7 +49,6 @@ public class App {
      */
     private JSONArray getStationsArray(String url) throws IOException {
         HttpClient client = HttpClientBuilder.create().build();
-
         HttpGet request = new HttpGet(url);
         request.addHeader("client-name", "sasoria-origosolution");
 
