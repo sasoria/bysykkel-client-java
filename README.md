@@ -6,7 +6,7 @@ javac 11.0.1
 Apache Maven 3.6.0
 ```
 
-## Run
+## Kjøring
 ```
 $ mvn clean install
 $ java -jar target/no.sasoria.losning-1.0-SNAPSHOT.jar
